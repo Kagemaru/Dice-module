@@ -2,6 +2,22 @@
 require 'pp'
 
 
+=begin ToDo list
+Rolls:
+[x] normal die
+[x] minimum die
+[x] maximum die
+[x] Action Dice
+[x] extra (bonus die on value >= X)
+[x] open  (bonus die on value >= X, on bonus dice too)
+
+Modifications:
+[x] highest X values
+[x] lowest X values
+[ ] hits (count values >= X)
+=end
+
+
 #Define vars
 DEBUG = true 
 #/Define vars
@@ -108,12 +124,82 @@ class Throw
 
 
 	def minroll(min, times=1)
-		if min == nil then puts "you need to give a minimum roll." end
+		if min == nil then puts "you need to give a minimum roll."; return -1 end
+		for i in 0...times do
+			@rolls[i] = Dice.new
+			for j in 0...@times
+				while @rolls[i][j].to_i < min do @rolls[i][j] = rand(@sides) + 1 end
+			end
+		end
+		puts "@rolls:" if DEBUG == "verbose"
+		pp(@rolls) if DEBUG == "verbose"
+		return @rolls
+	end
+
+
+	def maxroll(max, times=1)
+		if max == nil then puts "you need to give a maximum roll."; return -1 end
+		for i in 0...times do
+			@rolls[i] = Dice.new
+			for j in 0...@times
+				while @rolls[i][j].to_i > max || @rolls[i][j].to_i == 0 do @rolls[i][j] = rand(@sides) + 1 end
+			end
+		end
+		puts "@rolls:" if DEBUG == "verbose"
+		pp(@rolls) if DEBUG == "verbose"
+		return @rolls
+	end
+
+	
+	def actiondice(times=1)
 		for i in 0...times do
 			@rolls[i] = Dice.new
 			for j in 0...@times
 				@rolls[i][j] = rand(@sides) + 1
-				while @rolls[i][j] < min do @rolls[i][j] = rand(@sides) + 1 end
+				tmp = [@rolls[i][j]]
+				while tmp.last == 1 || tmp.last == @sides do
+					tmp.push(rand(@sides) + 1) 
+				end
+				tmp = tmp[0] if tmp.size == 1
+				@rolls[i][j] = tmp
+			end
+		end
+		puts "@rolls:" if DEBUG == "verbose"
+		pp(@rolls) if DEBUG == "verbose"
+		return @rolls
+	end
+
+
+	def extra(bonus,times=1)
+		for i in 0...times do
+			@rolls[i] = Dice.new
+			for j in 0...@times
+				@rolls[i][j] = rand(@sides) + 1
+				if @rolls[i][j] >= bonus then 
+					tmp = [@rolls[i][j]]
+					tmp.push(rand(@sides) + 1) 
+					tmp = tmp[0] if tmp.size == 1
+					@rolls[i][j] = tmp
+				end
+			end
+		end
+		puts "@rolls:" if DEBUG == "verbose"
+		pp(@rolls) if DEBUG == "verbose"
+		return @rolls
+	end
+
+
+	def open(bonus,times=1)
+		for i in 0...times do
+			@rolls[i] = Dice.new
+			for j in 0...@times
+				@rolls[i][j] = rand(@sides) + 1
+				tmp = [@rolls[i][j]]
+				while tmp.last >= bonus do
+					tmp.push(rand(@sides) + 1) 
+				end
+				tmp = tmp[0] if tmp.size == 1
+				@rolls[i][j] = tmp
 			end
 		end
 		puts "@rolls:" if DEBUG == "verbose"
@@ -171,8 +257,8 @@ end
 
 
 class Dice < Array
-	def lowest(*args)
-		if args[0].kind_of?(Integer) then val = args[0] else val = 3 end
+		
+	def lowest(val=3,type=nil)
 		if (self.size < val)
 			range = 0...self.size
 			puts "self: " if DEBUG == "verbose"
@@ -190,7 +276,7 @@ class Dice < Array
 			indices.push(tmp.index(values.shift))
 			tmp[indices.last] = 0
 		end
-		if args[1] == "index"
+		if type == "index"
 			return indices
 		else
 		    pp(indices) if DEBUG == "verbose"
@@ -200,8 +286,7 @@ class Dice < Array
 	end
 
 
-	def highest(*args)
-		if args[0].kind_of?(Integer) then val = args[0] else val = 3 end
+	def highest(val=3, type=nil)
 		if (self.size < val)
 			range = 0...self.size
 			puts "self: " if DEBUG == "verbose"
@@ -219,51 +304,32 @@ class Dice < Array
 			indices.push(tmp.index(values.shift))
 			tmp[indices.last] = 0
 		end
-		if args[1] == "index"
+		if type == "index"
 			return indices
 		else
 			pp(indices) if DEBUG == "verbose"
 			indices.sort.each { |n| tmp2.push(self[n]) }
 			return tmp2
 		end
-=begin
-		puts "args in highest: " if DEBUG == "verbose"
-		pp(args) if DEBUG == "verbose"
-		if args[0].kind_of?(Integer) then val = args[0] else val = 3 end
-		puts args[0].to_s + " = " + val.to_s if DEBUG == "verbose"
-		if (@dice.size < val)
-			range = 0..(@dice.size-1)
-			puts "@dice: " if DEBUG == "verbose"
-			puts "range = "+ range.to_s if DEBUG == "verbose"
+	end
+
+
+	def hits(limit=15,type=nil)
+		indices = Array.new
+		for i in 0...self.size
+			if self[i] >= limit
+				indices.push(i)
+			end
+		end
+		if type == "index"
+			return indices
+		elsif type == "numbers"
+			output = []
+			indices.each { |v| output.push(self[v]) }
+			return output
 		else
-			range = 0..(val-1)
-			puts "val = " + val.to_s
-			puts "range = " + range.to_s
+			return indices.size
 		end
-		tmp = @dice.clone
-		puts "tmp:"
-		pp(tmp)
-		values = tmp.sort.reverse[range]
-		indices = []
-		tmp2 = []
-		for i in range
-			indices.push(tmp.index(values.shift))
-			tmp[indices.last] = 0
-		end
-		puts "indices:" if DEBUG == "verbose"
-		pp(indices) if DEBUG == "verbose"
-		indices.sort.each { |n| tmp2.push(@dice][n) }
-		#@dice = tmp2
-		#@highest = indices
-		puts "@output:"
-		pp(@output)
-		puts "tmp2:"
-		pp(tmp2)
-		#@output][:highest = "highest " +val.to_s+": " + color(tmp2.join(" "),:red)
-		puts "tmp2:" if DEBUG == "verbose"
-		pp(tmp2) if DEBUG == "verbose"
-		return tmp2
-=end
 	end
 
 end
@@ -271,67 +337,60 @@ end
 #/Class Definitions
 
 
-begin #main
+if __FILE__ == $0 #main
 	puts "------------------ Entering Main ------------------" if DEBUG == "verbose"
-	#puts "coin: " + ((rand(2) == 0)?"heads":"tails").to_s
-	#roll("10d4+1.highest(5)")
-	#puts "5d6 (each):" + roll_dice("5d6+7","each").to_s
-#	puts "2d4-1: " + roll("2d4-1").to_s
+	puts "\n\nRolls:"
+	puts "------------------- Flip Coin: --------------------"
+	puts flip_coin	
+	puts "---------------------------------------------------"
+	puts "------------------ Normal Roll: -------------------"
 	test = Throw.new("5d20+1")
 	test.roll(2)
 	pp(test.rolls)
+	puts "---------------------------------------------------"
+	puts "-------------- Minimum Roll (5d4+1): --------------"
 	mintest = Throw.new("5d4+1")
 	mintest.minroll(2,2)
 	pp(mintest.rolls)
-	puts "------------------ End of Main ------------------" if DEBUG == "verbose"
+	puts "---------------------------------------------------"
+	puts "------------- Maximum Roll (5d20+1): --------------"
+	maxtest = Throw.new("5d20+1")
+	maxtest.maxroll(4,2)
+	pp(maxtest.rolls)
+	puts "---------------------------------------------------"
+	puts "--------------- Action Dice (5d4): ----------------"
+	adtest = Throw.new("5d4")
+	adtest.actiondice(2)
+	pp(adtest.rolls)
+	puts "---------------------------------------------------"
+	puts "-------------- Extra Roll: (5d20): ----------------"
+	extratest = Throw.new("5d20")
+	extratest.extra(15,2)
+	pp(extratest.rolls)
+	puts "---------------------------------------------------"
+	puts "--------------- Open Roll: (5d20): ----------------"
+	opentest = Throw.new("5d20+1")
+	opentest.open(15,2)
+	pp(opentest.rolls)
+	puts "------------------- End of Rolls ------------------"
+	puts "-------------------- Modifiers: -------------------"
+	puts "rolls to modify:"
+	pp(test.rolls)
+	puts "--------------------- Lowest: ---------------------"
+	puts "Roll 1:"
+	pp(test.rolls[0].lowest)
+	puts "Roll 2:"
+	pp(test.lowest)
+	puts "--------------------- Highest: --------------------"
+	puts "Roll 1:"
+	pp(test.rolls[0].highest)
+	puts "Roll 2:"
+	pp(test.highest)
+	puts "---------------------- Hits: ----------------------"
+	puts "Roll 1:"
+	pp(test.rolls[0].hits)
+	puts "Roll 2:"
+	pp(test.rolls[1].hits)
+	puts "----------------- End of Modifiers ----------------"
+	puts "------------------- End of Main -------------------" if DEBUG #== "verbose"
 end
-
-
-
-
-
-
-
-=begin
-			if $4 #scan for options
-				$4.scan(/\.[^.]*/i).each do
-					|m|
-					if m =~ /\((.*)\)/i
-						puts "@options][:#{m.scan(/[^.(]*/i)[1]} => #{m.match(/\((.*)\)/i)[1] }" if DEBUG == "verbose"
-						@options].push({ m.scan(/[^.(]*/i)[1.to_sym => m.match(/\((.*)\)/i)[1].split(",")})
-					else
-						puts "@options][:#{m.scan(/[^.(]*/i)[1]} => nil}" if DEBUG == "verbose"
-						@options].push({ m.scan(/[^.(]*/i)[1.to_sym => nil})
-					end
-				end
-			end
-
-
-
-
-
-
-
-
-	def evaloptions(options)
-		evaltext = ""
-		pp(options) if DEBUG == "verbose"
-		
-		options.each do |p|
-			pp(p) if DEBUG == "verbose"
-			p.each do |k,v|
-				evaltmp  = "self."
-				evaltmp += k.to_s
-				evaltmp += "("+ v.join(",") +")" if v
-				puts "k + evaltmp after case: "+k.to_s+" , "+ evaltmp if DEBUG == "verbose"
-				puts self.respond_to?(k.to_sym)
-				pp(@dice)
-				if self.respond_to?(k.to_sym) then evaltext += evaltmp+"\n" end
-			end
-		end
-		puts "evaltext before return: "+evaltext
-		eval(evaltext)
-	end
-
-
-=end
