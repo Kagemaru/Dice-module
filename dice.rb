@@ -14,7 +14,7 @@ Rolls:
 Modifications:
 [x] highest X values
 [x] lowest X values
-[ ] hits (count values >= X)
+[x] hits (count values >= X)
 =end
 
 
@@ -337,60 +337,119 @@ end
 #/Class Definitions
 
 
+def menu(rolls)
+	menu =<<EOT
+	Rolls:
+	\t[a][#{rolls["type"] == "normal" ? "X" : " "}] normal die
+	\t[b][#{rolls["type"] == "min" ? "X" : " "}] minimum die
+	\t[c][#{rolls["type"] == "max" ? "X" : " "}] maximum die
+	\t[d][#{rolls["type"] == "AD" ? "X" : " "}] Action Dice
+	\t[e][#{rolls["type"] == "extra" ? "X" : " "}] extra (bonus die on value >= X)
+	\t[f][#{rolls["type"] == "open" ? "X" : " "}] open  (bonus die on value >= X, on bonus dice too)
+
+	Modifications:
+	\t[g][#{rolls["opts"]["highest"] ? "X" : " "}] highest X values
+	\t[h][#{rolls["opts"]["lowest"] ? "X" : " "}] lowest X values
+	\t[i][#{rolls["opts"]["hits"] ? "X" : " "}] hits (count values >= X)
+	
+	Values:
+	\t[j] Roll x times: #{rolls["times"] ? rolls["times"] : " "}
+	\t[k] Dice: #{rolls["dice"] ? rolls["dice"] : " "}
+
+	Actions:
+	\t[r] Roll Dice
+	\t[z] Exit
+EOT
+end
+
+
 if __FILE__ == $0 #main
-	puts "------------------ Entering Main ------------------" if DEBUG == "verbose"
-	puts "\n\nRolls:"
-	puts "------------------- Flip Coin: --------------------"
-	puts flip_coin	
-	puts "---------------------------------------------------"
-	puts "------------------ Normal Roll: -------------------"
-	test = Throw.new("5d20+1")
-	test.roll(2)
-	pp(test.rolls)
-	puts "---------------------------------------------------"
-	puts "-------------- Minimum Roll (5d4+1): --------------"
-	mintest = Throw.new("5d4+1")
-	mintest.minroll(2,2)
-	pp(mintest.rolls)
-	puts "---------------------------------------------------"
-	puts "------------- Maximum Roll (5d20+1): --------------"
-	maxtest = Throw.new("5d20+1")
-	maxtest.maxroll(4,2)
-	pp(maxtest.rolls)
-	puts "---------------------------------------------------"
-	puts "--------------- Action Dice (5d4): ----------------"
-	adtest = Throw.new("5d4")
-	adtest.actiondice(2)
-	pp(adtest.rolls)
-	puts "---------------------------------------------------"
-	puts "-------------- Extra Roll: (5d20): ----------------"
-	extratest = Throw.new("5d20")
-	extratest.extra(15,2)
-	pp(extratest.rolls)
-	puts "---------------------------------------------------"
-	puts "--------------- Open Roll: (5d20): ----------------"
-	opentest = Throw.new("5d20+1")
-	opentest.open(15,2)
-	pp(opentest.rolls)
-	puts "------------------- End of Rolls ------------------"
-	puts "-------------------- Modifiers: -------------------"
-	puts "rolls to modify:"
-	pp(test.rolls)
-	puts "--------------------- Lowest: ---------------------"
-	puts "Roll 1:"
-	pp(test.rolls[0].lowest)
-	puts "Roll 2:"
-	pp(test.lowest)
-	puts "--------------------- Highest: --------------------"
-	puts "Roll 1:"
-	pp(test.rolls[0].highest)
-	puts "Roll 2:"
-	pp(test.highest)
-	puts "---------------------- Hits: ----------------------"
-	puts "Roll 1:"
-	pp(test.rolls[0].hits)
-	puts "Roll 2:"
-	pp(test.rolls[1].hits)
-	puts "----------------- End of Modifiers ----------------"
-	puts "------------------- End of Main -------------------" if DEBUG #== "verbose"
+	if DEBUG == "verbose"
+		puts "------------------ Entering Main ------------------"
+		puts "\n\nRolls:"
+		puts "------------------- Flip Coin: --------------------"
+		puts flip_coin	
+		puts "---------------------------------------------------"
+		puts "------------------ Normal Roll: -------------------"
+		test = Throw.new("5d20+1")
+		test.roll(2)
+		pp(test.rolls)
+		puts "---------------------------------------------------"
+		puts "-------------- Minimum Roll (5d4+1): --------------"
+		mintest = Throw.new("5d4+1")
+		mintest.minroll(2,2)
+		pp(mintest.rolls)
+		puts "---------------------------------------------------"
+		puts "------------- Maximum Roll (5d20+1): --------------"
+		maxtest = Throw.new("5d20+1")
+		maxtest.maxroll(4,2)
+		pp(maxtest.rolls)
+		puts "---------------------------------------------------"
+		puts "--------------- Action Dice (5d4): ----------------"
+		adtest = Throw.new("5d4")
+		adtest.actiondice(2)
+		pp(adtest.rolls)
+		puts "---------------------------------------------------"
+		puts "-------------- Extra Roll: (5d20): ----------------"
+		extratest = Throw.new("5d20")
+		extratest.extra(15,2)
+		pp(extratest.rolls)
+		puts "---------------------------------------------------"
+		puts "--------------- Open Roll: (5d20): ----------------"
+		opentest = Throw.new("5d20+1")
+		opentest.open(15,2)
+		pp(opentest.rolls)
+		puts "------------------- End of Rolls ------------------"
+		puts "-------------------- Modifiers: -------------------"
+		puts "rolls to modify:"
+		pp(test.rolls)
+		puts "--------------------- Lowest: ---------------------"
+		puts "Roll 1:"
+		pp(test.rolls[0].lowest)
+		puts "Roll 2:"
+		pp(test.lowest)
+		puts "--------------------- Highest: --------------------"
+		puts "Roll 1:"
+		pp(test.rolls[0].highest)
+		puts "Roll 2:"
+		pp(test.highest)
+		puts "---------------------- Hits: ----------------------"
+		puts "Roll 1:"
+		pp(test.rolls[0].hits)
+		puts "Roll 2:"
+		pp(test.rolls[1].hits)
+		puts "----------------- End of Modifiers ----------------"
+		puts "------------------- End of Main -------------------"
+	else
+		rolls = {}
+		rolls["opts"] = {}
+		quit = false
+		while quit != true
+			puts menu(rolls)
+			choice = gets.chomp
+			case choice
+				when 'a': rolls["type"] = "normal" 
+				when 'b': rolls["type"] = "min"
+				when 'c': rolls["type"] = "max"
+				when 'd': rolls["type"] = "AD"
+				when 'e': rolls["type"] = "extra"
+				when 'f': rolls["type"] = "open"
+				when 'g': 
+					if rolls["opts"]["highest"] then rolls["opts"]["highest"] = false
+					else rolls["opts"]["highest"] = true; rolls["opts"]["lowest"] = false; end
+				when 'h':
+					if rolls["opts"]["lowest"] then rolls["opts"]["lowest"] = false;
+					else rolls["opts"]["lowest"] = true; rolls["opts"]["highest"] = false; end
+				when 'i': 
+					if rolls["opts"]["hits"] then rolls["opts"]["hits"] = false
+					else rolls["opts"]["hits"] = true end
+				when 'j': 
+						tmp = gets.chomp.to_i
+						if tmp =~ /\d/
+				when 'k':
+				when 'r': 
+				when 'z': quit = true
+			end
+		end
+	end
 end
