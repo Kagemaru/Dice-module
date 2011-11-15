@@ -81,8 +81,8 @@ end
 def color(s,c)
 	color = "["
 	case c
-		when :red : color += "31"
-		when :green : color += "32"
+		when :red then color += "31"
+		when :green then color += "32"
 	end
 	color += "m"
 	return color + s.to_s + " [0m"
@@ -428,27 +428,29 @@ if __FILE__ == $0 #main
 			puts menu(rolls)
 			choice = gets.chomp
 			case choice
-				when 'a': rolls["type"] = "normal" 
-				when 'b': rolls["type"] = "min"
-				when 'c': rolls["type"] = "max"
-				when 'd': rolls["type"] = "AD"
-				when 'e': rolls["type"] = "extra"
-				when 'f': rolls["type"] = "open"
-				when 'g': 
+				when 'a' then rolls["type"] = "normal"
+				when 'b' then rolls["type"] = "min"
+				when 'c' then rolls["type"] = "max"
+				when 'd' then rolls["type"] = "AD"
+				when 'e' then rolls["type"] = "extra"
+				when 'f' then rolls["type"] = "open"
+				when 'g' then 
 					if rolls["opts"]["highest"] then rolls["opts"]["highest"] = false
-					else rolls["opts"]["highest"] = true; rolls["opts"]["lowest"] = false; end
-				when 'h':
-					if rolls["opts"]["lowest"] then rolls["opts"]["lowest"] = false;
-					else rolls["opts"]["lowest"] = true; rolls["opts"]["highest"] = false; end
-				when 'i': 
+					else rolls["opts"]["highest"] = true; rolls["opts"]["lowest"] = false
+					end
+				when 'h' then
+					if rolls["opts"]["lowest"] then rolls["opts"]["lowest"] = false
+					else rolls["opts"]["lowest"] = true; rolls["opts"]["highest"] = false
+					end
+				when 'i' then
 					if rolls["opts"]["hits"] then rolls["opts"]["hits"] = false
 					else rolls["opts"]["hits"] = true end
-				when 'j': 
+				when 'j' then 
 						tmp = gets.chomp.to_i
-						if tmp =~ /\d/
-				when 'k':
-				when 'r': 
-				when 'z': quit = true
+						if tmp =~ /\d/ then yield end
+				when 'k' then 
+				when 'r' then  
+				when 'z' then quit = true
 			end
 		end
 	end
